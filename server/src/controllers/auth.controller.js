@@ -1,32 +1,41 @@
 import { User } from "../models/User.model.js";
-import bcryptjs from "bcryptjs";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 export const signUp = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { username, email, password } = req.body;
 
   try {
-    const passwordHashed = await bcryptjs.hash(password, 10);
-
-    const existingUser = await User.findOne({ email });
-
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exist" });
-    }
+    const passwordHashed = await bcrypt.hash(password, 10);
 
     const newUser = new User({
-      name,
+      username,
       email,
       password: passwordHashed,
-      role,
     });
 
     const userSaved = await newUser.save();
 
-    res.status(201).json({
+    const token = jwt.sign(
+      { id: userSaved._id },
+      process.env.JWT_SECRET_KEY,
+      {
+        expiresIn: "1d",
+      },
+      (err, token) => {
+        if (err) console.log(err);
+        res.json({ token });
+      }
+    );
+
+    res.cookie("token", token);
+
+    res.json({
       id: userSaved._id,
       username: userSaved.username,
       email: userSaved.email,
+      createdAt: userSaved.createdAt,
+      updatedAt: userSaved.updatedAt,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -37,30 +46,50 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const userFound = await User.findOne(email);
-    if (!userFound) return res.status(401).json({ message: "User not found" });
+    const userFound = await User.findOne({ email });
 
-    const isMatch = await bcryptjs.compare(password, userFound.password);
+    if (!userFound) return res.status(400).json({ message: "User not found" });
+
+    const isMatch = await bcrypt.compare(password, userFound.password);
+
     if (!isMatch)
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign(
-      {
-        id: userSaved._id,
-      },
-      process.env.JWT_SECRET_KEY,
-      { expiresIn: "1d" }
-    );
+    const token = jwt.sign({ id: userFound._id }, process.env.JWT_SECRET_KEY, {
+      expiresIn: "1d",
+    });
 
-    res.cookie("token", token, { httpOnly: true });
+    res.cookie("token", token);
+
+    res.json({
+      id: userFound._id,
+      username: userFound.username,
+      email: userFound.email,
+      createdAt: userFound.createdAt,
+      updatedAt: userFound.updatedAt,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
 export const logout = (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
+  res.cookie("token", "", {
+    expires: new Date(0),
   });
-  res.json({ msg: "Logout successfully" });
+  return res.sendStatus(200);
+};
+
+export const profile = async (req, res) => {
+  const userFound = await User.findById(req.user.id);
+
+  if (!userFound) return res.status(400).json({ message: "User not found" });
+
+  return res.json({
+    id: userFound._id,
+    username: userFound.username,
+    email: userFound.email,
+    createdAt: userFound.createdAt,
+    updatedAt: userFound.updatedAt,
+  });
 };

@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema(
+
+const coachSchema = new mongoose.Schema(
   {
-    username: {
+    name: {
       type: String,
       required: true,
     },
@@ -10,12 +11,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      lowercase: true,
-      trim: true,
     },
-    password: {
+    bio: {
       type: String,
       required: true,
+    },
+    photoUrl: {
+      type: String,
+      default: "",
     },
   },
   {
@@ -23,4 +26,4 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-export const User = mongoose.model("User", userSchema)
+export const Coach = mongoose.model("Coach", coachSchema);

@@ -2,14 +2,14 @@ import mongoose from "mongoose";
 
 const bookingSchema = new mongoose.Schema(
   {
-    student: {
+    user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
     coach: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Coach",
       required: true,
     },
     date: {
@@ -17,24 +17,12 @@ const bookingSchema = new mongoose.Schema(
       required: true,
     },
     timeSlot: {
-      start: {
-        type: String,
-        required: true,
-      },
-      end: {
-        type: String,
-        required: true,
-      },
-    },
-    status: {
-      type: String,
-      enum: ["pending", "confirmed", "cancelled"],
-      default: "pending",
+      start: String,
+      end: String,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 export const Booking = mongoose.model("Booking", bookingSchema);
+
