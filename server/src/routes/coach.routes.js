@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { authMiddleware } from "../middleware/authMiddleware.js";
+import { getAllCoaches, getCoachById } from "../controllers/coach.controller.js";
 
 const coachRouter = Router();
 
-coachRouter.get("/coaches", authMiddleware);
-coachRouter.get("/coaches/:id", authMiddleware);
+coachRouter.get("/coaches", getAllCoaches);
+coachRouter.get("/coaches/:id", getCoachById);
 
 export default coachRouter;
